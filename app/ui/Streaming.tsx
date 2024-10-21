@@ -1,27 +1,29 @@
 'use client'
-import React, { useEffect, useRef } from 'react';
+import { error } from 'console';
+import { Scope_One } from 'next/font/google';
+import React, { useEffect, useRef ,useContext } from 'react';
 import { io } from 'socket.io-client';  // Import Socket.IO client
-
+import { Mycontext } from './CodeEditor';
+import { Socket } from 'dgram';
 const Streaming = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
+  const context = useContext(Mycontext)
+  if(!context)
+  {
+    throw new Error("MyContext must be used within a MyContext.Provider");
+  }
+  const {stream} = context
   useEffect(() => {
-    const socket = io("http://localhost:8000");  // Update the URL with your server's address
-
+    const socket = io("http://localhost:4949");  // Update the URL with your server's address
     // When connected to the socket
     socket.on('connect', () => {
       console.log('Socket.IO connection established');
+      socket.emit('start',{'cmd':'start'})
     });
-
     // Handle incoming video stream data
-    socket.on('video_stream', (data: ArrayBuffer) => {
-      // Convert ArrayBuffer to Blob (JPEG image)
-      const blob = new Blob([data], { type: 'image/jpeg' });
-
-      // Create an image object and set the Blob as its source
+    socket.on('video_stream', (data: string) => {
       const img = new Image();
-      const url = URL.createObjectURL(blob);
-      img.src = url;
+      img.src = `data:image/jpeg;base64,${data}`
 
       img.onload = () => {
         const canvas = canvasRef.current;
@@ -34,7 +36,9 @@ const Streaming = () => {
         }
 
         // Release the object URL after it's used to free up memory
-        URL.revokeObjectURL(url);
+        img.onerror = (error)=>{
+          console.error("Image loading error", error)
+        }
       };
     });
 
@@ -50,10 +54,10 @@ const Streaming = () => {
 
     // Cleanup when the component unmounts
     return () => {
+      socket.emit('stop','hi')
       socket.disconnect();
     };
   }, []);
-
   return (
     <div className='basis-1/2 w-full h-full'>
       <canvas className='w-full h-full' ref={canvasRef}></canvas>

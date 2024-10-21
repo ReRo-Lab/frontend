@@ -7,6 +7,7 @@ import Streaming from '../ui/Streaming';
 import checkCred from '../functions/functions';
 import CodeEditor from '../ui/CodeEditor';
 import { Suspense } from 'react';
+import LdrStream from '../ui/LdrStream';
 export default async function Page() {
   const res = await checkCred()
   console.log(res)
@@ -40,6 +41,7 @@ export default async function Page() {
   if (loading) {
     return <div>Loading...</div>;
   }
+    
 */
   return (
     <>

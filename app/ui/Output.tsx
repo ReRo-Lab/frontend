@@ -1,35 +1,31 @@
 import { useState,useEffect } from 'react'
 import io from 'socket.io-client'
+import clsx from 'clsx'
 interface messageFormat{
-    message: string
-    newLine: boolean
+    print: string;
+    type :'info'|'error';
 }
 export default function Output()
 {
-    const [logs,setlogs] = useState<string[]>([])
-    const [newLine , setNewLine] = useState<boolean>(false)
+    const [logs,setlogs] = useState<messageFormat[]>([])
     useEffect(()=>{
         const socket = io('http://localhost:6969')
         socket.on('print',(msg:messageFormat)=>{
-            setlogs((prevlogs)=>[...prevlogs,msg.message])
-            if(msg.newLine)
-            {
-                setNewLine(true)
-            }
-            else{
-                setNewLine(false)
-            }
+            console.log(msg)
+            setlogs((prevlogs)=>[...prevlogs,msg])
         })
+        socket.on('disconnect', () => {
+            console.log('Socket.IO disconnected');
+          });
+      
+          // Cleanup when the component unmounts
+          return () => {
+            
+            socket.disconnect();
+          };
     },[])
     const msgs = logs.map((log,index)=>{
-        if(newLine)
-        {
-        return <span key={index}>{log}</span>
-        }
-        else
-        {
-        return <div key={index}>{log}</div>
-        }
+        return <div key={index} className={log.type==='info'?'text-black':'text-red-600'}>{log.print}</div>
     })
     return (
         <div className="basis-1/2">
