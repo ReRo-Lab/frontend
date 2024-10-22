@@ -41,7 +41,7 @@ export default async function Page() {
   if (loading) {
     return <div>Loading...</div>;
   }
-    
+    <CodeEditor></CodeEditor>
 */
   return (
     <>

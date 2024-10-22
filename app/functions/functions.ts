@@ -9,26 +9,17 @@ const checkCred = async () => {
   }
 
   try {
-    const response = await axios.get('http://localhost:8080/me', {
+    const valid_url = process.env.VALIDATION_URL
+    if(!valid_url)
+    {
+      throw new Error(' valid url URL not defined')
+    }
+    const response = await axios.get(valid_url, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
-    console.log(response.data)
-    //Remove this later
-    if(response.data['username']==='root')
-    {
-      return { status: true, msg: 'Authenticated' };
-    }
-    else{
-      return { status: false, msg: 'Not authenticated' };
-    }
-    //Remove this later
-    if (response.data['is_authenticated']) {
-      return { status: true, msg: 'Authenticated' };
-    } else {
-      return { status: false, msg: 'Not authenticated' };
-    }
+    return {status:true , msg:'Authenticated'}
   } catch (error) {
     if (axios.isAxiosError(error)) {
       if (error.response?.status === 401) {

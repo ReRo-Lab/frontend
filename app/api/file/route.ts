@@ -1,5 +1,6 @@
 import { NextRequest,NextResponse} from "next/server";
 import { cookies } from "next/headers";
+import { error } from "console";
 interface BodyParams
 {
     code : string
@@ -21,7 +22,12 @@ export  async function POST(request:NextRequest) {
         formData.append('file',blob)
         try
         {
-            const res = await fetch('http://localhost:8080/bot/iot/code',{
+            const file_url = process.env.FILE_IOT_URL
+            if(!file_url)
+            {
+                throw new Error('URL not defined')
+            }
+            const res = await fetch(file_url,{
                 method:'POST',
                 headers:{
                     'accept': 'application/json',

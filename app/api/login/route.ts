@@ -6,7 +6,13 @@ export async function POST(request:NextRequest) {
     const formData = new FormData();
     formData.append('username',username);
     formData.append('password',password);
-    const response = await axios.post('http://localhost:8080/token',formData, {
+    const token_url = process.env.TOKEN_URL ;
+    if(!token_url)
+    {
+      throw new Error('URL not defined')
+    }
+    console.log(token_url)
+    const response = await axios.post(token_url,formData, {
       headers:{
         'Content-Type': 'multipart/form-data'
       }

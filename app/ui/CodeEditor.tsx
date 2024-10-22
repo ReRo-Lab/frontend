@@ -93,7 +93,7 @@ export default function CodeEditor() {
         <Navbar onRun={handleRun} onStop={handleStop} onOutput={handleOutput} onEditor = {handleEditor} onCam={handleCam} onLidar={handleLidar}/>
         <div className="basis-11/12 flex flex-col">
           <div className="h-screen flex flex-row-reverse">
-            <div className="basis-1/2 flex flex-col">
+            <div className="basis-1/2">
             {nav==='editor'?<Editor
                 defaultLanguage="python"
                 value={editorContent}
