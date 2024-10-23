@@ -108,6 +108,7 @@ export default function CodeEditor({bot}:CodeEditorProps) {
     const serverIP = process.env.NEXT_PUBLIC_SERVER_IP;
     const cookie = getCookie('JWTtoken')
     console.log(cookie)
+    console.log(serverIP)
     const socket = io(serverIP,{
         extraHeaders :{
             'AUTHORIZATION':`${cookie}`
