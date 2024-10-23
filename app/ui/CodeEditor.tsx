@@ -104,9 +104,11 @@ export default function CodeEditor({bot}:CodeEditorProps) {
     }
   };
   useEffect(()=>{
+    // Get server ip from environment
+    const serverIP = process.env.NEXT_PUBLIC_SERVER_IP;
     const cookie = getCookie('JWTtoken')
     console.log(cookie)
-    const socket = io('http://localhost:8080',{
+    const socket = io(serverIP,{
         extraHeaders :{
             'AUTHORIZATION':`${cookie}`
         }
