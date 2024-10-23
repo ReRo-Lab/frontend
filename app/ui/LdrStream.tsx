@@ -6,14 +6,14 @@ export default function LdrStream() {
     const [imageData, setImageData] = useState<string>('');
 
     useEffect(() => {
+        // TODO: Take the variables from the environment
         const socket = io('http://192.168.0.104:5000');
 
         // Emit a message to start the stream
-        
-        socket.on('connect',()=>{
-            console.log('connected')
-            socket.emit('start',{'command':'start'});
+        socket.on('connect', () => {
+            socket.emit('start', { 'command': 'start' });
         })
+
         // Listen for the image stream
         socket.on('stream', (data: string) => {
             setImageData(data);
@@ -21,8 +21,7 @@ export default function LdrStream() {
 
         // Cleanup on component unmount
         return () => {
-            console.log("hi")
-            socket.emit('stop','hi')
+            socket.emit('stop', 'hi')
             socket.disconnect();
         };
     }, []);

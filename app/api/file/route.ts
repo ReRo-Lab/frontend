@@ -1,40 +1,61 @@
-import { NextRequest,NextResponse} from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { error } from "console";
-interface BodyParams
-{
-    code : string
+
+
+interface BodyParams {
+    code: string
 }
-export  async function POST(request:NextRequest) {
+
+
+export async function POST(request: NextRequest) {
+    // Get JWT Token
     const token = cookies().get('JWTtoken')
-    if(!token)
-    {
+    
+    // If no token, redirect to login page
+    if (!token) {
         NextResponse.redirect('/')
     }
-    else
-    {
-        const body:BodyParams = await request.json();
+    else {
+
+        // Get headers
+        const headers = request.headers
+        const bot = headers.get('bot')
+        const body: BodyParams = await request.json();
+
         console.log(body.code)
-        //const fileBuffer = Buffer.from(body.code,'utf8')
-        //console.log(fileBuffer)
-        const blob = new Blob([body.code],{type:'text/x-python'})
+
+        // Creating a blob file
+        const blob = new Blob([body.code], { type: 'text/x-python' })
         const formData = new FormData();
-        formData.append('file',blob)
-        try
-        {
-            const file_url = process.env.FILE_IOT_URL
-            if(!file_url)
-            {
+        
+        // Add file to form data
+        formData.append('file', blob)
+        
+        
+        try {
+            // Construct URL from environment variables
+            const server_ip = process.env.SERVER_IP;
+            const bot_url = process.env.BOT_URL;
+            const file_url = bot === 'iot' ? process.env.FILE_IOT_URL : process.env.FILE_ROS_URL
+
+            // Defined variable checkk
+            if (!file_url || !server_ip) {
                 throw new Error('URL not defined')
             }
-            const res = await fetch(file_url,{
-                method:'POST',
-                headers:{
+
+            // Make the POST request to the backend
+            const res = await fetch(server_ip + bot_url + file_url, {
+                method: 'POST',
+                headers: {
                     'accept': 'application/json',
-                    'Authorization' : `Bearer ${token.value}`
+                    'Authorization': `Bearer ${token.value}`
                 },
-                body : formData
+                body: formData
             })
+
+            // Testing code
+            // TODO: Remove this code
             const reader = res.body?.getReader();
             let resBody = '';
             if (reader) {
@@ -48,21 +69,20 @@ export  async function POST(request:NextRequest) {
                     }
                 }
             }
-            console.log(resBody);
-            if(!res.ok)
-            {
+
+            // Alert user
+            if (!res.ok) {
                 return new NextResponse("File not sent")
             }
             return new NextResponse("File Sent")
         }
-        catch(error)
-        {
-            console.log("File not sent",error)
+        catch (error) {
+            console.log("File not sent", error)
             return new NextResponse("File not sent")
         }
     }
-    
-    
 
-    
+
+
+
 }

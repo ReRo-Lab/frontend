@@ -6,24 +6,43 @@ import Navbar from "./Navbar";
 import Streaming from "./Streaming";
 import Output from "./Output";
 import LdrStream from "./LdrStream";
+import { getCookie, setCookie } from "cookies-next";
+import io from 'socket.io-client'
+import { headers } from "next/headers";
+import { useRouter } from "next/navigation";
+
 interface MyContextType {
   theme: "vs-light" | "vs-dark";
   setTheme: React.Dispatch<React.SetStateAction<"vs-light" | "vs-dark">>;
   bot : 'iot'|'ros';
   stream : 'cam'|'lidar';
+  nav : 'editor'|'output'
 }
-
+export interface MessageProps{
+  print: string;
+  bot:'iot'|'ros'
+  type :'info'|'error';
+}
+interface CodeEditorProps{
+  bot:'iot'|'ros'
+}
 
 export const Mycontext = createContext<MyContextType | undefined>(undefined);
 
-export default function CodeEditor() {
+export default function CodeEditor({bot}:CodeEditorProps) {
+  const router = useRouter()
   const [theme, setTheme] = useState<"vs-light" | "vs-dark">("vs-dark");
   const monaco = useMonaco();
   const [nav,setNav] = useState<'output'|'editor'>('editor');
   const [stream,setStream] = useState<'cam'|'lidar'>('cam');
-  const [bot,setbot] = useState<'iot'|'ros'>('ros');
-  const [editorContent,setEditorContent] = useState<string>('#Rero')
+ 
+  const [editorContent,setEditorContent] = useState<string>(`def main():
+    dump("Hello")
+    `)
+
+
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const [logs,setLogs] = useState<MessageProps[]>([])
   //const editorInstanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   function handleEditorMount(editor: monaco.editor.IStandaloneCodeEditor) {
     editorRef.current = editor;
@@ -38,9 +57,25 @@ export default function CodeEditor() {
       monaco.editor.setTheme(theme);
     }
   }, [monaco, theme]);
-  // Effect to update the theme whenever it changes
 
-  useEffect(() => {}, [theme]);
+  // Clear the JWT Token and logout
+  const handleLogout = async () => {
+    
+    const jwt = getCookie("JWTtoken")
+    if(!jwt)
+    {
+      console.log('No token found')
+    }
+    else{
+      const result = await fetch('/api/logout', {method: 'GET', headers: {"jwt": jwt.toString()}});
+      setCookie("JWTtoken", "");
+      router.push('/')
+      
+    }
+    
+  }
+
+  // Effect to update the theme whenever it changes
   const handleRun = async () => {
     if (editorRef.current) {
       console.log("Running Code:", monaco);
@@ -52,6 +87,7 @@ export default function CodeEditor() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "bot":bot
           },
           body: JSON.stringify(j),
         });
@@ -67,10 +103,44 @@ export default function CodeEditor() {
       }
     }
   };
-
+  useEffect(()=>{
+    const cookie = getCookie('JWTtoken')
+    console.log(cookie)
+    const socket = io('http://localhost:8080',{
+        extraHeaders :{
+            'AUTHORIZATION':`${cookie}`
+        }
+    })
+    socket.on('print',(msg:MessageProps)=>{
+        console.log(msg)
+        setLogs((prevlogs)=>{
+          if(prevlogs.length>20){
+            return []
+          }
+          else{
+            return [...prevlogs,msg] 
+          }
+          })
+    })
+    socket.on('connect', () => {
+      console.log("Connected to socket")
+    })
+    socket.on('disconnect', () => {
+        console.log('Socket.IO disconnected');
+      });
+  
+      // Cleanup when the component unmounts
+      return () => {
+        
+        socket.disconnect();
+      };
+},[])
   const handleStop = async () => {
+    const data = {'bot':bot}
     console.log("Stopping execution...");
-    const res = await fetch("/api/stop", { method: "GET" });
+    const res = await fetch("/api/stop", { method: "GET" ,headers:{
+      'bot':bot
+    }});
     console.log(res.body);
   };
 
@@ -88,10 +158,10 @@ export default function CodeEditor() {
   }
   //<div ref={editorRef}  className="w-full basis-[99%]"></div>
   return (
-    <Mycontext.Provider value={{ theme, setTheme ,bot ,stream }}>
+    <Mycontext.Provider value={{ theme, setTheme ,bot ,stream ,nav}}>
       <div className="flex flex-col">
-        <Navbar onRun={handleRun} onStop={handleStop} onOutput={handleOutput} onEditor = {handleEditor} onCam={handleCam} onLidar={handleLidar}/>
-        <div className="basis-11/12 flex flex-col">
+        <Navbar onRun={handleRun} onStop={handleStop} onOutput={handleOutput} onEditor = {handleEditor} onCam={handleCam} onLidar={handleLidar} onLogout={handleLogout}/>
+        <div className=" flex flex-col">
           <div className="h-screen flex flex-row-reverse">
             <div className="basis-1/2">
             {nav==='editor'?<Editor
@@ -100,7 +170,7 @@ export default function CodeEditor() {
                 theme={theme}
                 onMount={handleEditorMount}
                 onChange={handleEditorChange}
-              ></Editor>:<Output></Output>}
+              ></Editor>:<Output msg={logs}></Output>}
               
             </div>
             {stream==='cam'?(<Streaming></Streaming>):(<LdrStream></LdrStream>)}

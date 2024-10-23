@@ -1,30 +1,33 @@
 'use client'
-import { error } from 'console';
-import { Scope_One } from 'next/font/google';
-import React, { useEffect, useRef ,useContext } from 'react';
-import { io } from 'socket.io-client';  // Import Socket.IO client
+
+import React, { useEffect, useRef, useContext } from 'react';
+import { io } from 'socket.io-client'; 
 import { Mycontext } from './CodeEditor';
-import { Socket } from 'dgram';
+
 const Streaming = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const context = useContext(Mycontext)
-  if(!context)
-  {
+  if (!context) {
     throw new Error("MyContext must be used within a MyContext.Provider");
   }
-  const {stream} = context
+  const { stream } = context
   useEffect(() => {
-    const socket = io("http://localhost:4949");  // Update the URL with your server's address
+    // TODO: Import URL from environment variable
+    const socket = io("http://localhost:4949"); 
+    
     // When connected to the socket
     socket.on('connect', () => {
       console.log('Socket.IO connection established');
-      socket.emit('start',{'cmd':'start'})
+      socket.emit('start', { 'cmd': 'start' })
     });
+
     // Handle incoming video stream data
     socket.on('video_stream', (data: string) => {
+      // Create an image with the decode data of the base 64 image data
       const img = new Image();
       img.src = `data:image/jpeg;base64,${data}`
 
+      // Render image on canvas
       img.onload = () => {
         const canvas = canvasRef.current;
         if (canvas) {
@@ -36,7 +39,7 @@ const Streaming = () => {
         }
 
         // Release the object URL after it's used to free up memory
-        img.onerror = (error)=>{
+        img.onerror = (error) => {
           console.error("Image loading error", error)
         }
       };
@@ -54,12 +57,12 @@ const Streaming = () => {
 
     // Cleanup when the component unmounts
     return () => {
-      socket.emit('stop','hi')
+      socket.emit('stop', 'hi')
       socket.disconnect();
     };
   }, []);
   return (
-    <div className='basis-1/2 w-full h-full'>
+    <div className='basis-1/2 rounded-md'>
       <canvas className='w-full h-full' ref={canvasRef}></canvas>
     </div>
   );

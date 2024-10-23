@@ -1,26 +1,37 @@
 import { cookies } from 'next/headers';
 import axios from 'axios';
 
+// Check for JWT
 const checkCred = async () => {
+
+  // Get JWTtoken
   const token = cookies().get('JWTtoken')?.value;
-  console.log(token)
+
+  // Return false on no token
   if (!token) {
     return { status: false, msg: 'Token not found in cookies' };
   }
 
   try {
-    const valid_url = process.env.VALIDATION_URL
-    if(!valid_url)
-    {
+    // Construct URL from environment variables
+    const server_ip = process.env.SERVER_IP;
+    const valid_url = process.env.VALIDATION_URL;
+
+    if (!valid_url || !server_ip) {
       throw new Error(' valid url URL not defined')
     }
-    const response = await axios.get(valid_url, {
+
+    // Make a POST request to confirm JWTtoken
+    const response = await axios.get(server_ip + valid_url, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
-    return {status:true , msg:'Authenticated'}
+
+    
+    return { status: true, msg: 'Authenticated', bot: response.data.bot }
   } catch (error) {
+    // Error handling
     if (axios.isAxiosError(error)) {
       if (error.response?.status === 401) {
         return { status: false, msg: 'Authorization failed' };
