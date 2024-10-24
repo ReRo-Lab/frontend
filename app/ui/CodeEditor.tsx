@@ -10,6 +10,7 @@ import { getCookie, setCookie } from "cookies-next";
 import io from 'socket.io-client'
 import { headers } from "next/headers";
 import { useRouter } from "next/navigation";
+import { log } from "console";
 
 interface MyContextType {
   theme: "vs-light" | "vs-dark";
@@ -162,25 +163,23 @@ export default function CodeEditor({bot}:CodeEditorProps) {
   //<div ref={editorRef}  className="w-full basis-[99%]"></div>
   return (
     <Mycontext.Provider value={{ theme, setTheme ,bot ,stream ,nav}}>
-      <div className="flex flex-col">
+      <div className="flex flex-col w-screen h-screen">
         <Navbar onRun={handleRun} onStop={handleStop} onOutput={handleOutput} onEditor = {handleEditor} onCam={handleCam} onLidar={handleLidar} onLogout={handleLogout}/>
-        <div className=" flex flex-col">
-          <div className="h-screen flex flex-row-reverse">
-            <div className="basis-1/2">
-            {nav==='editor'?<Editor
+            <div className="basis-[40%] border-white">
+            <Editor
                 defaultLanguage="python"
                 value={editorContent}
                 theme={theme}
                 onMount={handleEditorMount}
                 onChange={handleEditorChange}
-              ></Editor>:<Output msg={logs}></Output>}
-              
+              ></Editor>
             </div>
-            {stream==='cam'?(<Streaming></Streaming>):(<LdrStream></LdrStream>)}
-            
-          </div>
+            <div className="basis-[40%]">
+                <Output msg={logs}></Output>
+            </div>
         </div>
-      </div>
+      
     </Mycontext.Provider>
   );
 }
+//{stream==='cam'?():(<LdrStream></LdrStream>)}

@@ -25,3 +25,24 @@ body {
     text-wrap: balance;
   }
 }
+
+.outputcell {
+  /* Padding for the text */
+  padding-top: 10px;
+  padding-left: 10px;
+  padding-bottom: 10px;
+  padding-right: 10px;
+
+  /*Border & cruvature*/
+  border: 1px solid transparent;
+  border-radius: 10px;
+  margin: 10px;
+}
+
+.streamingcell {
+
+  /*Border & cruvature*/
+  border: -10px solid white;
+  /* border-radius: 10px; */
+  margin: 10px;
+}

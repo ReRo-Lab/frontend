@@ -23,7 +23,7 @@ export default function LoginForm() {
       if (res.status === 200) {
         const token: string = res.data.access_token
         console.log(token)
-        setCookie('JWTtoken', token, { maxAge: 60 * 60 * 24, secure: false, sameSite: 'lax' });
+        setCookie('JWTtoken', token, { maxAge: 60 * 60 * 24, secure: true, sameSite: 'none' });
         router.push('/dashboard')
       }
     } catch (error) {
